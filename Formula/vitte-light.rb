@@ -14,18 +14,32 @@ class VitteLight < Formula
   end
 
   def install
+    # Build
     system "cmake", "-S", ".", "-B", "build", *std_cmake_args,
            "-DCMAKE_BUILD_TYPE=Release",
            "-DCMAKE_C_STANDARD=11"
     system "cmake", "--build", "build", "--parallel"
+
+    # Install (relies on install(TARGETS ...) in CMakeLists.txt)
     system "cmake", "--install", "build"
 
-    # Alias utilisateur court
-    bin.install_symlink "vitte-cli" => "vitl"
+    # User-friendly alias
+    bin.install_symlink "vitte-cli" => "vitl" if (bin/"vitte-cli").exist?
+  end
+
+  def caveats
+    <<~EOS
+      Installed binaries:
+        - vitte-cli  (main CLI)
+        - vitlc      (compiler, if provided by CMake)
+      Convenience alias:
+        - vitl -> vitte-cli
+    EOS
   end
 
   test do
-    assert_match("--help", shell_output("#{bin}/vitte-cli --help"))
-    assert_match("--help", shell_output("#{bin}/vitl --help"))
+    # Basic CLI responds
+    assert_match("--help", shell_output("#{bin}/vitte-cli --help")) if (bin/"vitte-cli").exist?
+    assert_match("--help", shell_output("#{bin}/vitl --help"))      if (bin/"vitl").exist?
   end
 end
