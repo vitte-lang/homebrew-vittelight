@@ -14,16 +14,19 @@ class VitteLight < Formula
   end
 
   def install
+    # Supprime un éventuel build/ fourni dans le tarball
+    rm_rf "build"
+
     # Build
     system "cmake", "-S", ".", "-B", "build", *std_cmake_args,
            "-DCMAKE_BUILD_TYPE=Release",
            "-DCMAKE_C_STANDARD=11"
     system "cmake", "--build", "build", "--parallel"
 
-    # Install (relies on install(TARGETS ...) in CMakeLists.txt)
+    # Install (CMakeLists.txt définit install(TARGETS ...))
     system "cmake", "--install", "build"
 
-    # User-friendly alias
+    # Alias utilisateur (vitl -> vitte-cli)
     bin.install_symlink "vitte-cli" => "vitl" if (bin/"vitte-cli").exist?
   end
 
@@ -38,8 +41,11 @@ class VitteLight < Formula
   end
 
   test do
-    # Basic CLI responds
-    assert_match("--help", shell_output("#{bin}/vitte-cli --help")) if (bin/"vitte-cli").exist?
-    assert_match("--help", shell_output("#{bin}/vitl --help"))      if (bin/"vitl").exist?
+    if (bin/"vitte-cli").exist?
+      assert_match("--help", shell_output("#{bin}/vitte-cli --help"))
+    end
+    if (bin/"vitl").exist?
+      assert_match("--help", shell_output("#{bin}/vitl --help"))
+    end
   end
 end
