@@ -27,15 +27,16 @@ class VitteLight < Formula
     system "cmake", "--install", "build"
 
     # Alias pratique si le binaire principal s'appelle vitte-cli
-    bin.install_symlink "vitte-cli" => "vitl" if (bin/"vitte-cli").exist?
+    bin.install_symlink "vitte-cli" => "vitte-light" if (bin/"vitte-cli").exist?
   end
 
   test do
-    if (bin/"vitl").exist?
-      assert_match "--help", shell_output("#{bin}/vitl --help")
+    if (bin/"vitte-light").exist?
+      assert_match "--help", shell_output("#{bin}/vitte-light --help")
     elsif (bin/"vitte-cli").exist?
       assert_match "--help", shell_output("#{bin}/vitte-cli --help")
     else
       odie "No executable installed"
     end
   end
+end
