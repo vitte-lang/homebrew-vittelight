@@ -1,42 +1,40 @@
-class VitteLight < Formula
-  desc "Lightweight C runtime and CLI for the Vitte language"
-  homepage "https://github.com/vitte-lang/VitteLight"
-  url "https://github.com/vitte-lang/VitteLight/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "18c12aa6280f858f9b273f41955fc0d7f41d8611ca9883fe6debfff2875fdb45"
+class Vitl < Formula
+  desc "Vitl — lightweight runtime and CLI for the Vitte programming language"
+  homepage "https://github.com/vitte-lang/vitte-light"
+  url "https://github.com/vitte-lang/vitte-light/releases/download/v0.1.0/vitl-v0.1.0.tar.gz"
+  sha256 "b1e2a947bbf22b77f2f14f9129c782be8fd39c11cc9a9b66ab47d01c6b3f084f"
   license "MIT"
-  head "https://github.com/vitte-lang/VitteLight.git", branch: "main"
 
-  depends_on "cmake" => :build
+  head "https://github.com/vitte-lang/vitte-light.git", branch: "main"
 
-  on_linux do
-    depends_on "gcc" => :build
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  def install
-    rm_rf "build"
-    args = %W[
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_C_STANDARD=11
-      -DCMAKE_SKIP_INSTALL_RPATH=OFF
-      -DCMAKE_INSTALL_RPATH=#{rpath}
-      -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
-      -DCMAKE_POSITION_INDEPENDENT_CODE=ON
-    ]
-    system "cmake", "-S", ".", "-B", "build", *std_cmake_args, *args
-    system "cmake", "--build", "build", "--parallel"
-    system "cmake", "--install", "build"
+  depends_on "rust" => :build
 
-    # Alias pratique si le binaire principal s'appelle vitte-cli
-    bin.install_symlink "vitte-cli" => "vitte-light" if (bin/"vitte-cli").exist?
+  def install
+    # Binaire principal (command: vitl)
+    bin.install "bin/vitl"
+
+    # Ressources partagées (sources ou stdlib)
+    pkgshare.install "share/vitl-src" => "vitl-src" if Dir.exist?("share/vitl-src")
+
+    # Completions facultatives
+    bash_completion.install "completions/vitl.bash" if File.exist?("completions/vitl.bash")
+    zsh_completion.install "completions/_vitl" if File.exist?("completions/_vitl")
+    fish_completion.install "completions/vitl.fish" if File.exist?("completions/vitl.fish")
   end
 
   test do
-    if (bin/"vitte-light").exist?
-      assert_match "--help", shell_output("#{bin}/vitte-light --help")
-    elsif (bin/"vitte-cli").exist?
-      assert_match "--help", shell_output("#{bin}/vitte-cli --help")
-    else
-      odie "No executable installed"
-    end
+    # Vérifie la version
+    output = shell_output("#{bin}/vitl --version")
+    assert_match version.to_s, output
+
+    # Vérifie l’exécution d’un petit programme
+    (testpath/"hello.vitl").write('print("Hello, Vitl!")')
+    run_output = shell_output("#{bin}/vitl run hello.vitl")
+    assert_match "Hello, Vitl!", run_output
   end
 end
